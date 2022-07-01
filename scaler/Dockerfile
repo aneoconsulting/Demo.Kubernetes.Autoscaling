@@ -5,9 +5,9 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["Scaler.csproj", "."]
+COPY ["scaler/Scaler.csproj", "."]
 RUN dotnet restore "Scaler.csproj"
-COPY . .
+COPY scaler .
 RUN dotnet build "Scaler.csproj" -c Release -o /app/build
 
 FROM build AS publish
