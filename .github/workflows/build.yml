@@ -69,10 +69,10 @@ jobs:
       fail-fast: true
       matrix:
         include:
-        -  img : dockerhubaneo/demo_kas_scaler
-           path: ./scaler/Dockerfile
+        - img : dockerhubaneo/demo_kas_scaler
+          path: ./scaler/Dockerfile
         - img : dockerhubaneo/demo_kas_client
-           path: ./client/Dockerfile
+          path: ./client/Dockerfile
 
     steps:
     - name: Checkout
