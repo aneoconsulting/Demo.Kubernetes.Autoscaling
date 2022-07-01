@@ -39,6 +39,7 @@ jobs:
       matrix:
         project:
           - ./scaler/Scaler.csproj
+          - ./client/Client.csproj
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -70,6 +71,8 @@ jobs:
         include:
         -  img : dockerhubaneo/demo_kas_scaler
            path: ./scaler/Dockerfile
+        - img : dockerhubaneo/demo_kas_client
+           path: ./client/Dockerfile
 
     steps:
     - name: Checkout
