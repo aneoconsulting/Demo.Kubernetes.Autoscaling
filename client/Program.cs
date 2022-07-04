@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.Linq;
-using Amazon;
-using Amazon.Runtime;
+using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
@@ -42,9 +38,7 @@ public static class Program
     var receiveMessageResponse = await client.ReceiveMessageAsync(receiveMessageRequest);
     Console.WriteLine("Printing received message.\n");
     foreach (var message in receiveMessageResponse.Messages)
-    {
       Console.WriteLine("  MessageId: {0} Body: {1}", message.MessageId, message.Body);
-    }
 
     if (receiveMessageResponse.Messages.Count > 0)
     {
@@ -59,17 +53,17 @@ public static class Program
   private static async Task<int> Main()
   {
     var rootCommand = new RootCommand(
-      description: "Converts an image file from one format to another.");
+      "Converts an image file from one format to another.");
 
     var queueOption = new Option<string>(
-      aliases: new[] { "--queue", "-q" }, () => ""
-      , description: "The queue in which insert/pull messages.");
+      new[] { "--queue", "-q" }, () => ""
+      , "The queue in which insert/pull messages.");
     rootCommand.AddOption(queueOption);
 
 
     var createOption = new Option<bool>(
-      aliases: new[] { "--create", "-c" }
-      , description: "Create Queue");
+      new[] { "--create", "-c" }
+      , "Create Queue");
     rootCommand.AddOption(queueOption);
 
     var batchSize = 10;
