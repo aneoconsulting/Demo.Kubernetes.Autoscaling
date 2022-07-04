@@ -1,9 +1,6 @@
 ﻿using System;
-using System.CommandLine;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.SQS;
-using Amazon.SQS.Model;
 
 namespace Client;
 
@@ -50,37 +47,23 @@ public static class Program
     }
   }
 
-  private static async Task<int> Main()
+
+  private static async Task HandlerFunc(string queue, string region, int batchSize, int batchNumber,
+    TimeSpan batchDelay)
   {
-    var rootCommand = new RootCommand(
-      "Converts an image file from one format to another.");
+    var client = new AmazonSQSClient(RegionEndpoint.GetBySystemName(region));
 
-    var queueOption = new Option<string>(
-      new[] { "--queue", "-q" }, () => ""
-      , "The queue in which insert/pull messages.");
-    rootCommand.AddOption(queueOption);
-
-
-    var createOption = new Option<bool>(
-      new[] { "--create", "-c" }
-      , "Create Queue");
-    rootCommand.AddOption(queueOption);
-
-    var batchSize = 10;
-    var nBatch = 50;
-    var waitingTime = TimeSpan.FromSeconds(3);
-
-    var client = new AmazonSQSClient();
-
-    var createQueue = new CreateQueueRequest();
-    createQueue.QueueName = "MyQueue";
+    var createQueue = new CreateQueueRequest
+    {
+      QueueName = queue
+    };
     var createQueueResponse = await client.CreateQueueAsync(createQueue);
     var myQueueUrl = createQueueResponse.QueueUrl;
 
 
-    for (var batch = 0; batch < nBatch; batch++)
+    for (var batch = 0; batch < batchNumber; batch++)
     {
-      Console.WriteLine("Sending a message to MyQueue.\n");
+      Console.WriteLine($"Sending a message to {queue}.");
       var sendMessageRequest = new SendMessageBatchRequest();
       sendMessageRequest.QueueUrl = myQueueUrl;
 
@@ -93,24 +76,58 @@ public static class Program
       }));
 
       await client.SendMessageBatchAsync(sendMessageRequest);
-      await Task.Delay(waitingTime);
+      await Task.Delay(batchDelay);
     }
 
-    await Task.Delay(waitingTime);
+    await Task.Delay(batchDelay);
 
     while (await client.GetNumberOfMessages(myQueueUrl) > 0)
     {
       await client.DeleteMessages(myQueueUrl);
-      await Task.Delay(waitingTime);
+      await Task.Delay(batchDelay);
     }
 
     for (var i = 0; i < 10; i++)
     {
       await client.GetNumberOfMessages(myQueueUrl);
       await client.DeleteMessages(myQueueUrl);
-      await Task.Delay(waitingTime);
+      await Task.Delay(batchDelay);
     }
+  }
 
-    return 0;
+  private static async Task Main(string[] args)
+  {
+    var rootCommand = new RootCommand(
+      "Inserts and removes messages from AWS SQS.");
+
+    var queueOption = new Option<string>(
+      new[] { "--queue", "-q" }, () => "myQueue"
+      , "The queue in which insert/pull messages.");
+    rootCommand.AddOption(queueOption);
+
+    var regionOption = new Option<string>(
+      new[] { "--region", "-r" }, () => "us-east-2"
+      , "The AWS region in which the SQS instance should be located.");
+    rootCommand.AddOption(regionOption);
+
+    var batchSizeOption = new Option<int>(
+      new[] { "--batchsize", "-b" }, () => 10
+      , "The number of messages to put in the SQS instance at a time.");
+    rootCommand.AddOption(batchSizeOption);
+
+    var batchNumberOption = new Option<int>(
+      new[] { "--batchnumber", "-n" }, () => 10
+      , "The number of batches to insert in the SQS instance.");
+    rootCommand.AddOption(batchNumberOption);
+
+    var batchDelayOption = new Option<TimeSpan>(
+      new[] { "--batchdelay", "-d" }, () => TimeSpan.FromSeconds(3)
+      , "The delay between the insertion of two batches in the SQS instance.");
+    rootCommand.AddOption(batchDelayOption);
+
+    rootCommand.SetHandler(HandlerFunc, queueOption, regionOption, batchSizeOption,
+      batchNumberOption, batchDelayOption);
+
+    await rootCommand.InvokeAsync(args);
   }
 }
