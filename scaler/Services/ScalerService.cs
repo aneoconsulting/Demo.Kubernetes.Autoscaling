@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
@@ -16,9 +17,9 @@ public class ScalerService : ExternalScaler.ExternalScalerBase
   private static readonly ConcurrentDictionary<string, ConcurrentBag<IServerStreamWriter<IsActiveResponse>>> Streams =
     new();
 
-  private static async Task<int> GetMessageCount(string queue)
+  private static async Task<int> GetMessageCount(string queue, string region)
   {
-    var client = new AmazonSQSClient();
+    var client = new AmazonSQSClient(RegionEndpoint.GetBySystemName(region));
 
     var createQueue = new CreateQueueRequest
     {
@@ -41,11 +42,13 @@ public class ScalerService : ExternalScaler.ExternalScalerBase
 
   public override async Task<IsActiveResponse> IsActive(ScaledObjectRef request, ServerCallContext context)
   {
-    if (!request.ScalerMetadata.ContainsKey("sqsQueue"))
-      throw new ArgumentException("SQS Queue name should be specified");
+    if (!request.ScalerMetadata.ContainsKey("sqsQueue")
+        || !request.ScalerMetadata.ContainsKey("region"))
+      throw new ArgumentException("SQS Queue name and region should be specified");
 
     var queue = request.ScalerMetadata["sqsQueue"];
-    var messageCount = await GetMessageCount(queue);
+    var region = request.ScalerMetadata["region"];
+    var messageCount = await GetMessageCount(queue, region);
     return new IsActiveResponse
     {
       Result = messageCount > 1
@@ -55,14 +58,16 @@ public class ScalerService : ExternalScaler.ExternalScalerBase
   public override async Task StreamIsActive(ScaledObjectRef request,
     IServerStreamWriter<IsActiveResponse> responseStream, ServerCallContext context)
   {
-    if (!request.ScalerMetadata.ContainsKey("sqsQueue"))
-      throw new ArgumentException("SQS Queue name should be specified");
+    if (!request.ScalerMetadata.ContainsKey("sqsQueue")
+        || !request.ScalerMetadata.ContainsKey("region"))
+      throw new ArgumentException("SQS Queue name and region should be specified");
 
     var queue = request.ScalerMetadata["sqsQueue"];
+    var region = request.ScalerMetadata["region"];
 
     while (!context.CancellationToken.IsCancellationRequested)
     {
-      var messageCount = await GetMessageCount(queue);
+      var messageCount = await GetMessageCount(queue, region);
       if (messageCount > 1)
         await responseStream.WriteAsync(new IsActiveResponse
         {
@@ -85,12 +90,14 @@ public class ScalerService : ExternalScaler.ExternalScalerBase
 
   public override async Task<GetMetricsResponse> GetMetrics(GetMetricsRequest request, ServerCallContext context)
   {
-    if (!request.ScaledObjectRef.ScalerMetadata.ContainsKey("sqsQueue"))
-      throw new ArgumentException("SQS Queue name should be specified");
+    if (!request.ScaledObjectRef.ScalerMetadata.ContainsKey("sqsQueue")
+        || !request.ScaledObjectRef.ScalerMetadata.ContainsKey("region"))
+      throw new ArgumentException("SQS Queue name and region should be specified");
 
     var queue = request.ScaledObjectRef.ScalerMetadata["sqsQueue"];
+    var region = request.ScaledObjectRef.ScalerMetadata["region"];
 
-    var messageCount = await GetMessageCount(queue);
+    var messageCount = await GetMessageCount(queue, region);
 
     var resp = new GetMetricsResponse();
     resp.MetricValues.Add(new MetricValue
