@@ -2,6 +2,7 @@
 using System.CommandLine;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
