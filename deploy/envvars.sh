@@ -1,0 +1,7 @@
+export DEMO_PROFILE="default"
+export DEMO_REGION="us-east-1"
+export DEMO_SUFFIX="demo"
+export DEMO_BUCKET_NAME="kube-autoscaling-tfstate"
+export DEMO_KUBERNETES_NAMESPACE="demo"
+export DEMO_CLUSTER_NAME="demo-cluster"
+export KEDA_KUBERNETES_NAMESPACE="default"
