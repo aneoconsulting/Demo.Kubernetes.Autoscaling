@@ -1,0 +1,90 @@
+name: Build and Test
+
+on:
+  push:
+    branches-ignore:
+      - release
+    tags-ignore: [ '**' ]
+
+jobs:
+  versionning:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.genver.outputs.version }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+        fetch-depth: 0
+
+    - name: Generate Version
+      id: genver
+      run: |
+        if [[ "${{ github.ref_name }}" == "releases/"* ]]
+        then
+          VERSION=$(docker run --rm -v $(pwd):/repo codacy/git-version /bin/git-version --folder=/repo --release-branch=release --dev-branch=${{ github.ref_name }}) 
+        else
+          VERSION=$(docker run --rm -v $(pwd):/repo codacy/git-version /bin/git-version --folder=/repo --release-branch=release --dev-branch=main)
+        fi
+
+        echo "::set-output name=version::$VERSION"
+        echo $VERSION
+
+  buildProjects:
+    runs-on: ubuntu-latest
+    # find . -name "*.csproj" | xargs -I % echo - %
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - ./scaler/Scaler.csproj
+          - ./client/Client.csproj
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+        submodules: true
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.x
+
+    - name: Build the projects
+      run: |
+        dotnet build ${{ matrix.project }} -c Release
+
+
+  buildImages:
+    runs-on: ubuntu-latest
+    needs:
+      - versionning
+      - buildProjects
+    env:
+      VERSION: ${{ needs.versionning.outputs.version }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+        - img : dockerhubaneo/demo_kas_scaler
+          path: ./scaler/Dockerfile
+        - img : dockerhubaneo/demo_kas_client
+          path: ./client/Dockerfile
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+        submodules: true
+
+    - name: login
+      run: echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
+
+    - name: Build
+      run: docker build -t ${{ matrix.img }}:$VERSION -f ${{ matrix.path }} .
+
+    - name: push
+      run: docker push ${{ matrix.img }}:$VERSION
