@@ -1,0 +1,6 @@
+export DEMO_PROFILE="default"
+export DEMO_REGION="eu-west-3"
+export DEMO_SUFFIX="demo"
+export DEMO_KUBERNETES_NAMESPACE="demo"
+export KEDA_KUBERNETES_NAMESPACE="default"
+export DEMO_CLUSTER_NAME="eks-cluster"

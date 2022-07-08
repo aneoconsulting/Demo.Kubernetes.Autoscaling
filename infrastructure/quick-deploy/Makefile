@@ -1,0 +1,132 @@
+export DEMO_SUFFIX?=demo
+export DEMO_REGION?=eu-west-3
+export DEMO_PROFILE?=default
+export DEMO_KUBERNETES_NAMESPACE?=demo
+export DEMO_CLUSTER_NAME?=eks-cluster
+
+CURRENT_DIR=$(shell pwd)
+VPC_PARAMETERS_FILE?=$(CURRENT_DIR)/vpc/generated/vpc-output.json
+EKS_PARAMETERS_FILE?=$(CURRENT_DIR)/eks/generated/eks-output.json
+
+include envvars.sh
+
+####################################
+#             AWS VPC              #
+####################################
+
+deploy-vpc:
+	$(MAKE) -C $(CURRENT_DIR)/vpc deploy \
+		SUFFIX=$(DEMO_SUFFIX) \
+		REGION=$(DEMO_REGION) \
+		PROFILE=$(DEMO_PROFILE) \
+		CLUSTER_NAME=$(DEMO_CLUSTER_NAME)
+
+destroy-vpc:
+	$(MAKE) -C $(CURRENT_DIR)/vpc destroy \
+		SUFFIX=$(DEMO_SUFFIX) \
+		REGION=$(DEMO_REGION) \
+		PROFILE=$(DEMO_PROFILE) \
+		CLUSTER_NAME=$(DEMO_CLUSTER_NAME)
+
+clean-vpc:
+	$(MAKE) -C $(CURRENT_DIR)/vpc clean
+
+####################################
+#            AWS ECR               #
+####################################
+
+deploy-ecr:
+	$(MAKE) -C $(CURRENT_DIR)/ecr deploy \
+		SUFFIX=$(DEMO_SUFFIX) \
+		REGION=$(DEMO_REGION) \
+		PROFILE=$(DEMO_PROFILE)
+
+destroy-ecr:
+	$(MAKE) -C $(CURRENT_DIR)/ecr destroy \
+		SUFFIX=$(DEMO_SUFFIX) \
+		REGION=$(DEMO_REGION) \
+		PROFILE=$(DEMO_PROFILE)
+
+clean-ecr:
+	$(MAKE) -C $(CURRENT_DIR)/ecr clean
+
+####################################
+#             AWS EKS              #
+####################################
+
+deploy-eks:
+	$(MAKE) -C $(CURRENT_DIR)/eks deploy \
+		SUFFIX=$(DEMO_SUFFIX) \
+		REGION=$(DEMO_REGION) \
+		PROFILE=$(DEMO_PROFILE) \
+		CLUSTER_NAME=$(DEMO_CLUSTER_NAME) \
+		VPC_PARAMETERS_FILE=$(VPC_PARAMETERS_FILE)
+
+destroy-eks:
+	$(MAKE) -C $(CURRENT_DIR)/eks destroy \
+		SUFFIX=$(DEMO_SUFFIX) \
+		REGION=$(DEMO_REGION) \
+		PROFILE=$(DEMO_PROFILE) \
+		CLUSTER_NAME=$(DEMO_CLUSTER_NAME) \
+		VPC_PARAMETERS_FILE=$(VPC_PARAMETERS_FILE)
+
+clean-eks:
+	$(MAKE) -C $(CURRENT_DIR)/eks clean
+
+####################################
+#       Kubernetes namespace       #
+####################################
+
+create-namespace:
+	kubectl create namespace $(DEMO_KUBERNETES_NAMESPACE) || true
+	kubectl create namespace $(KEDA_KUBERNETES_NAMESPACE) || true
+
+delete-namespace:
+	kubectl delete namespace $(DEMO_KUBERNETES_NAMESPACE) || true
+	kubectl delete namespace $(KEDA_KUBERNETES_NAMESPACE) || true
+
+####################################
+#              KEDA                #
+####################################
+
+deploy-keda:
+	$(MAKE) -C $(CURRENT_DIR)/keda deploy \
+		EKS_PARAMETERS_FILE=$(EKS_PARAMETERS_FILE) \
+		NAMESPACE=$(KEDA_KUBERNETES_NAMESPACE)
+
+destroy-keda:
+	$(MAKE) -C $(CURRENT_DIR)/keda destroy \
+		EKS_PARAMETERS_FILE=$(EKS_PARAMETERS_FILE) \
+		NAMESPACE=$(KEDA_KUBERNETES_NAMESPACE)
+
+clean-keda:
+	$(MAKE) -C $(CURRENT_DIR)/keda clean
+
+####################################
+#            AWS SQS               #
+####################################
+
+deploy-sqs:
+	$(MAKE) -C $(CURRENT_DIR)/sqs deploy \
+		SUFFIX=$(DEMO_SUFFIX) \
+		REGION=$(DEMO_REGION) \
+		PROFILE=$(DEMO_PROFILE)
+
+destroy-sqs:
+	$(MAKE) -C $(CURRENT_DIR)/sqs destroy \
+		SUFFIX=$(DEMO_SUFFIX) \
+		REGION=$(DEMO_REGION) \
+		PROFILE=$(DEMO_PROFILE)
+
+clean-sqs:
+	$(MAKE) -C $(CURRENT_DIR)/sqs clean
+
+####################################
+#               All                #
+####################################
+
+deploy-all: deploy-vpc deploy-sqs deploy-ecr deploy-eks create-namespace deploy-keda
+
+destroy-all: destroy-keda delete-namespace destroy-eks destroy-ecr destroy-sqs destroy-vpc
+
+clean-all: clean-keda clean-eks clean-ecr clean-sqs clean-vpc
