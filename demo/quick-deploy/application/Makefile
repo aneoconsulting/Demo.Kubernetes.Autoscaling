@@ -6,6 +6,9 @@ OUTPUT_FILE=$(GENERATED_DIR)/application-output.json
 
 export TF_DATA_DIR?=$(GENERATED_DIR)
 export NAMESPACE?=demo
+export SUFFIX?=demo
+export REGION?=eu-west-3
+export PROFILE?=default
 export EKS_PARAMETERS_FILE?=$(CURRENT_DIR)/../eks/generated/eks-output.json
 export SQS_PARAMETERS_FILE?=$(CURRENT_DIR)/../sqs/generated/sqs-output.json
 export METRICS_EXPORTER_PARAMETERS_FILE?=$(CURRENT_DIR)/../metrics-exporter/generated/metrics-exporter-output.json
@@ -26,6 +29,9 @@ apply:
 		-var-file $(SQS_PARAMETERS_FILE) \
 		-var-file $(METRICS_EXPORTER_PARAMETERS_FILE) \
 		-var 'namespace=$(NAMESPACE)' \
+		-var 'region=$(REGION)' \
+		-var 'suffix=$(SUFFIX)' \
+		-var 'profile=$(PROFILE)' \
 		-state $(STATE_FILE) \
 		-auto-approve
 
@@ -42,6 +48,9 @@ destroy:
 		-var-file $(SQS_PARAMETERS_FILE) \
 		-var-file $(METRICS_EXPORTER_PARAMETERS_FILE) \
 		-var 'namespace=$(NAMESPACE)' \
+		-var 'region=$(REGION)' \
+		-var 'suffix=$(SUFFIX)' \
+		-var 'profile=$(PROFILE)' \
 		-state $(STATE_FILE) \
 		-auto-approve
 

@@ -2,14 +2,12 @@
 variable "profile" {
   description = "Profile of AWS credentials to deploy Terraform sources"
   type        = string
-  default     = "default"
 }
 
 # Region
 variable "region" {
   description = "AWS region where the infrastructure will be deployed"
   type        = string
-  default     = "eu-west-3"
 }
 
 # Kubeconfig path

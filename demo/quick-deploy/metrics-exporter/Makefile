@@ -6,6 +6,9 @@ OUTPUT_FILE=$(GENERATED_DIR)/metrics-exporter-output.json
 
 export TF_DATA_DIR?=$(GENERATED_DIR)
 export NAMESPACE?=demo
+export SUFFIX?=demo
+export REGION?=eu-west-3
+export PROFILE?=default
 export EKS_PARAMETERS_FILE?=$(CURRENT_DIR)/../eks/generated/eks-output.json
 
 .PHONY: apply destroy
@@ -22,6 +25,9 @@ apply:
 		-var-file $(PARAMETERS_FILE) \
 		-var-file $(EKS_PARAMETERS_FILE) \
 		-var 'namespace=$(NAMESPACE)' \
+		-var 'region=$(REGION)' \
+		-var 'suffix=$(SUFFIX)' \
+		-var 'profile=$(PROFILE)' \
 		-state $(STATE_FILE) \
 		-auto-approve
 
@@ -36,6 +42,9 @@ destroy:
 		-var-file $(PARAMETERS_FILE) \
 		-var-file $(EKS_PARAMETERS_FILE) \
 		-var 'namespace=$(NAMESPACE)' \
+		-var 'region=$(REGION)' \
+		-var 'suffix=$(SUFFIX)' \
+		-var 'profile=$(PROFILE)' \
 		-state $(STATE_FILE) \
 		-auto-approve
 
