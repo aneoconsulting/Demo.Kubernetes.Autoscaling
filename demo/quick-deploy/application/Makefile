@@ -30,7 +30,6 @@ apply:
 		-var-file $(METRICS_EXPORTER_PARAMETERS_FILE) \
 		-var 'namespace=$(NAMESPACE)' \
 		-var 'region=$(REGION)' \
-		-var 'suffix=$(SUFFIX)' \
 		-var 'profile=$(PROFILE)' \
 		-state $(STATE_FILE) \
 		-auto-approve
@@ -49,7 +48,6 @@ destroy:
 		-var-file $(METRICS_EXPORTER_PARAMETERS_FILE) \
 		-var 'namespace=$(NAMESPACE)' \
 		-var 'region=$(REGION)' \
-		-var 'suffix=$(SUFFIX)' \
 		-var 'profile=$(PROFILE)' \
 		-state $(STATE_FILE) \
 		-auto-approve
