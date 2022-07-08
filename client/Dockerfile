@@ -16,8 +16,6 @@ RUN dotnet publish "Client.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-RUN groupadd --gid 5000 user && useradd --home-dir /home/user --create-home --uid 5000 --gid 5000 --shell /bin/sh --skel /dev/null user
-USER user
 
 ENV ASPNETCORE_URLS http://+:1080
 EXPOSE 1080
