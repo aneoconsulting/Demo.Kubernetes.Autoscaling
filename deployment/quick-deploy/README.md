@@ -83,7 +83,7 @@ the output of this command should be as follows:
 From the **root** of the repository, position yourself in directory `demo/quick-deploy`.
 
 ```bash
-cd demo/quick-deploy
+cd deployment/quick-deploy
 ```
 
 You need to set a list of environment variables [envvars.sh](envvars.sh) :
