@@ -5,8 +5,8 @@
 - [Prerequisites](#prerequisites)
     - [Software](#software)
     - [AWS credentials](#aws-credentials)
-- [All-in-one deploy](all-in-one-deploy)
 - [Set environment variables](#set-environment-variables)
+- [All-in-one deploy](all-in-one-deploy)
 - [Deploy infrastructure](#deploy-infrastructure)
     - [AWS VPC](#aws-vpc)
     - [AWS ECR](#aws-ecr)
@@ -78,15 +78,6 @@ the output of this command should be as follows:
 }
 ```
 
-# All-in-one deploy
-
-All commands described hereafter can be executed with one command. To deploy infrastructure and Demo application in
-all-in-one command, You execute:
-
-```bash
-make deploy-all
-```
-
 # Set environment variables
 
 From the **root** of the repository, position yourself in directory `demo/quick-deploy`.
@@ -120,6 +111,15 @@ where:
 - `KEDA_KUBERNETES_NAMESPACE`: is the namespace in Kubernetes for [KEDA](https://keda.sh/)
 
 **Warning:** `DEMO_SUFFIX` must be *UNIQUE* to allow resources to have unique name in AWS
+
+# All-in-one deploy
+
+All commands described hereafter can be executed with one command. To deploy infrastructure and Demo application in
+all-in-one command, You execute:
+
+```bash
+make deploy-all
+```
 
 # Deploy infrastructure
 
