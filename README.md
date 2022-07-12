@@ -3,7 +3,7 @@
 
 ## How to deploy
 
-The documentation on how to deploy this demo can be found [here](./demo/README.md)
+The documentation on how to deploy this demo can be found [here](./deployment/README.md)
 
 
 ## How to populate SQS queue
